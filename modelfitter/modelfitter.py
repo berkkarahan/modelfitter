@@ -33,7 +33,7 @@ class BaseCVFitter:
 class CVModelFit(BaseCVFitter):
     def __init__(self, X, y, model, cvgen):
         modellist = []
-        for _ in cvgen.split(X,y):
+        for _ in cvgen.n_splits:
             cloned_mdl = clone(self.model)
             modellist.append(cloned_mdl)
         super().__init__(X=X, y=y, models_list=modellist, cvgen=cvgen)
