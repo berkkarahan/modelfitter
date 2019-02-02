@@ -3,12 +3,11 @@ import threading
 import numpy as np
 from sklearn.base import clone
 
-
-class CVModelFit:
-    def __init__(self, X, y, model, cvgen):
+class BaseCVFitter:
+    def __init__(self, X, y, models_list, cvgen):
         self.x = X
         self.y = y
-        self.model = model
+        self.models = models_list
         self.cvgen = cvgen
 
         self._threadlist = []
@@ -30,12 +29,21 @@ class CVModelFit:
         infoldpreds = np.hstack(infoldpreds)
         return infoldpreds
 
+
+class CVModelFit(BaseCVFitter):
+    def __init__(self, X, y, model, cvgen):
+        modellist = []
+        for _ in cvgen.split(X,y):
+            cloned_mdl = clone(self.model)
+            modellist.append(cloned_mdl)
+        super().__init__(X=X, y=y, models_list=modellist, cvgen=cvgen)
+
     def fit(self):
-        for tr_i, ho_i in self.cvgen.split(self.x, self.y):
+        for i, tpl in enumerate(self.cvgen.split(self.x, self.y)):
+            tr_i, ho_i = tpl
             self._train_ind.append(tr_i)
             self._holdout_ind.append(ho_i)
-            cloned_mdl = clone(self.model)
-            self._modellist.append(cloned_mdl)
+            cloned_mdl = self._modellist[i]
             self._threadlist.append(threading.Thread(target=self._fit, args=(cloned_mdl, self.x[tr_i], self.y[tr_i],)))
 
         for t in self._threadlist:
