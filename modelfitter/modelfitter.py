@@ -7,11 +7,10 @@ class BaseCVFitter:
     def __init__(self, X, y, models_list, cvgen):
         self.x = X
         self.y = y
-        self.models = models_list
         self.cvgen = cvgen
 
         self._threadlist = []
-        self._modellist = []
+        self._modellist = models_list
         self._train_ind = []
         self._holdout_ind = []
         self._predictions = []
@@ -43,7 +42,7 @@ class CVModelFit(BaseCVFitter):
             tr_i, ho_i = tpl
             self._train_ind.append(tr_i)
             self._holdout_ind.append(ho_i)
-            cloned_mdl = self.models[i]
+            cloned_mdl = self._modellist[i]
             self._threadlist.append(threading.Thread(target=self._fit, args=(cloned_mdl, self.x[tr_i], self.y[tr_i],)))
 
         for t in self._threadlist:
@@ -55,7 +54,7 @@ class CVModelFit(BaseCVFitter):
         print("Model fitting complete.")
 
     def predict(self, x):
-        infoldpreds = self._predict(self.models, x)
+        infoldpreds = self._predict(self._modellist, x)
         return np.mean(infoldpreds, axis=1)
 
     def score(self, skscorer):
